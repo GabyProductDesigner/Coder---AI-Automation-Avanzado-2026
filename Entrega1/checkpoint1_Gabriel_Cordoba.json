@@ -1,5 +1,5 @@
 {
-  "name": "AI Adv - Entrega 2 - Manager",
+  "name": "AI Adv - Entrega 1",
   "nodes": [
     {
       "parameters": {
@@ -8,492 +8,112 @@
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.4,
       "position": [
-        -352,
-        -16
+        -464,
+        0
       ],
-      "id": "ff290671-ae03-47cd-b648-ccdac6beb1ec",
+      "id": "b30b4c26-b922-45dd-983c-1acd64d26f1e",
       "name": "When chat message received",
-      "webhookId": "d793f8d7-cec1-4733-ba54-4fd7d5a82a29"
+      "webhookId": "f1446d47-6199-4daf-afda-59a19166505a"
     },
     {
       "parameters": {
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        16,
+        304
+      ],
+      "id": "71be1291-cdc7-4bb4-b379-95927d9c96b4",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Recibís la información:\n\nCanal: {{ $json['Canal '] }}\nMensaje: {{ $json.Mensaje }}\nFecha: {{ $json.Fecha }}\nHora: {{ $json.Hora }}",
+        "hasOutputParser": true,
         "options": {
-          "systemMessage": "Sos un router de triaje y tenes que clasificar la petición del cliente en UNA sola categoría de esta taxonomía CERRADA. NUNCA inventes una categoría fuera de esta lista:\n\nAlta del producto: solicitud de tarjeta de crédito, solicitud de préstamos, solicitud de cuenta bancaria, solicitud de caja de ahorro, solicitud de cuenta corriente, identificación, verificación de identidad, documentación, firma de contrato, requisitos, donde solicito el producto, donde solicito el alta.\n\nRecepción del producto: entrega, plazos, dirección, día de entrega, hora de entrega, envío, correo, cartero.\n\nPago del producto: pago, pago de tarjeta de crédito, pago de préstamo, pago de la cuenta, pago de la cuenta corriente, pago del préstamo, pago del resumen de tarjeta, uvas, problemas con el pago, pago vencido, pago no acreditado, deuda, pago adeudado, plan de pago, planes de pago.\n\nBaja del producto: baja, cancelación, baja del producto, solicitud de baja, el sistema no me tomo la baja, solicitud de baja de tarjeta de crédito, solicitud de baja de préstamo, solicitud de baja de cuenta, como solicito la baja, donde solicito la baja.\n\nRobo o extravío del producto: robo, extravío, pérdida, no encuentro el producto, me robaron la tarjeta, me robaron la cuenta, no tengo mi plata, perdí la tarjeta.\n\nDEVUELVE SOLO la categoría elegida.",
-          "maxIterations": 10
+          "systemMessage": "# ROL\nSos el asistente virtual especializado en atención y soporte de tarjetas de crédito. Tu tono es profesional, conciso y empático.\n\n# ÁMBITO\nAtendés EXCLUSIVAMENTE consultas relacionadas con:\n- Pago de tarjeta.\n- Pérdida o robo de tarjeta.\n- Desconocimiento de compras.\n- Solicitud de nueva tarjeta.\n- Solicitud de extensión adicional.\n\n# OBJETIVO\nResponder las dudas de los usuarios utilizando ÚNICAMENTE la herramienta de base de conocimiento oficial (`base_de_conocimiento`), o transferir el caso a un agente humano cuando corresponda, garantizando trazabilidad y respuestas fundamentadas.\n\n# REGLAS DE NEGOCIO Y OPERACIÓN\n1. **Uso obligatorio de herramientas:** Nunca respondas desde tu conocimiento general. Consultá siempre `base_de_conocimiento` antes de emitir una respuesta.\nUTILIZAR SIEMPRE que el usuario realice preguntas sobre: \n- Procedimientos de pago de resúmenes o liquidaciones.\n- Reporte por robo o pérdida de tarjeta física.\n- Inicio del trámite de desconocimiento de consumos no realizados.\n- Requisitos y pasos para solicitar una nueva tarjeta o una extensión para adicionales.\n\n2. **Parámetros de búsqueda:** El parámetro `tema` debe coincidir exactamente con una de estas opciones: `Pago de tarjeta`, `Pérdida de tarjeta`, `Desconocimiento de compra`, `Solicitud de tarjeta` o `Solicitud de extensión`.\n3. **Consultas compuestas:** Si el usuario consulta por dos temas distintos, ejecutá una búsqueda por cada uno (máximo 2 búsquedas por turno).\n4. **Citas obligatorias:** Toda respuesta basada en la base de conocimiento debe incluir al final la cita textual del código de artículo correspondiente (ej: `[Ref: T12`).\n\n# TRAZABILIDAD OBLIGATORIA\nCada vez que consultes la herramienta `base_de_conocimiento`:\n1. Identificá el registro utilizado para responder.\n2. Copiá exactamente el valor de la columna \"Tema\" en el campo `parametro_busqueda`.\n3. Copiá exactamente el valor de la columna \"Código\" en el campo `codigo_referencia`.\n4. Generá la respuesta utilizando únicamente la información asociada a ese registro.\n5. Si existen varias coincidencias, utilizá la más relevante para resolver la consulta.\n6. Si no encontrás información suficiente, dejá vacíos `parametro_busqueda` y `codigo_referencia`, marcá `escalado = true` y derivá el caso.\n\nLa respuesta final debe ajustarse exactamente al esquema definido por el Output Parser.\n\n# PROTOCOLO DE ESCALAMIENTO\nDerivá inmediatamente la conversación al equipo humano cuando se detecte:\n- Solicitud explícita de turno en sucursal o contacto con supervisor.\n- Reclamos de reintegros de dinero, devoluciones o compensaciones.\n- Solicitud de cambios de domicilio o datos sensibles.\n- Mención de acciones legales, denuncias o tono de reclamo formal.\n- Información no cubierta tras consultar la base de conocimiento.\n\n*Instrucción de cierre tras escalar:* Respondé con un mensaje breve informando la derivación e informá que nos comunicaremos a la brevedad.\n\n# LÍMITES EXPLÍCITOS (LO QUE NUNCA DEBÉS HACER)\n- NO realices transferencias, débitos ni transacciones bancarias directas.\n- NO prometas plazos de resolución ni resultados comerciales/legales.\n- NO solicites ni almacenes datos sensibles completos (claves, CVV, PIN).\n- NO respondas consultas fuera del ámbito de tarjetas de crédito.\n\n# FORMATO DE RESPUESTA\nNo respondas en lenguaje natural.\nDebés devolver únicamente un objeto JSON válido compatible con el Output Parser.\nNo agregues explicaciones.\nNo agregues texto antes o después del JSON.\nNo utilices Markdown.\n",
+          "maxIterations": 5
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -96,
-        -16
+        -32,
+        0
       ],
-      "id": "1abce188-919b-4d62-ab27-2e7b348c8204",
-      "name": "AI Agent"
+      "id": "9f25ad0f-4498-43e8-9e7f-b4c8446cec84",
+      "name": "AI Agent with Tool"
     },
     {
       "parameters": {
-        "rules": {
+        "descriptionType": "manual",
+        "toolDescription": "Base de conocimiento oficial de soporte del banco: información sobre Pago de tarjeta, Pérdida de tarjeta, Desconocimiento de compra, Solicitud de tarjeta y Solicitud de extensión. \n\nUSÁ ESTA HERRAMIENTA SIEMPRE antes de responder cualquier consulta sobre políticas, plazos, planes, productos o procedimientos.\n\nEl parámetro 'tema' es OBLIGATORIO y tiene que ser exactamente uno de: Pago de tarjeta, Pérdida de tarjeta, Desconocimiento de compra, Solicitud de tarjeta y Solicitud de extensión (minúscula, singular, sin acentos). \n\nGuía para elegirlo: \n· errores al pagar o cobros → Pago de tarjeta \n· perdidas, extravío, no enncuentra su tarjeta → Pérdida de tarjeta \n· No compré, no conozco el monto, no hice la compra → Desconocimiento de compra\n· quiero una tarjeta, necesito una tarjeta, nueva tarjeta → Solicitud de tarjeta\n· necesito o quiero una extensión → Solicitud de extensión\n\nDevuelve el código (código Txx y respuesta oficial) o nada si el tema no existe. \n\nNO la uses para datos personales del cliente ni para consultar el estado de su cuenta: para eso no hay herramienta y hay que escalar.",
+        "documentId": {
+          "__rl": true,
+          "value": "1fnPyCpIXU8CS47LI3sDmtwbD1KK4ATGVpFkwZYXoz3g",
+          "mode": "list",
+          "cachedResultName": "Soporte de Tarjetas de Crédito",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fnPyCpIXU8CS47LI3sDmtwbD1KK4ATGVpFkwZYXoz3g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fnPyCpIXU8CS47LI3sDmtwbD1KK4ATGVpFkwZYXoz3g/edit#gid=0"
+        },
+        "filtersUI": {
           "values": [
             {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "03bda210-c9c4-45bb-8d60-f6b9fc23a05f",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "Alta del producto",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Alta del producto"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "Recepción del producto",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "f539a214-1d55-428b-82b0-39cfd901bd1e"
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Recepción del producto"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "6c41a6b7-e9c0-4f3f-9044-b7d821fd4673",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "Pago del producto",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Pago del producto"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "f6253e64-480e-4e3c-af17-3ca0c0c35b37",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "Baja del producto",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Baja del producto"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "24fceb4a-5084-438b-b79a-5d4260407447",
-                    "leftValue": "={{ $json.output }}",
-                    "rightValue": "Robo o extravío del producto",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "Robo o extravío del producto"
+              "lookupColumn": "Tema",
+              "lookupValue": "={{$fromAI('tema', 'OBLIGATORIO. Uno de: Pago de tarjeta, Pérdida de tarjeta, Desconocimiento de compra, Solicitud de tarjeta y Solicitud de extensión', 'string', 'sin tema')}}"
             }
           ]
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
       "position": [
-        272,
-        -64
+        176,
+        304
       ],
-      "id": "a9070cdb-c827-4ab4-92d9-cf31f20f0c75",
-      "name": "Switch"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
-      "typeVersion": 1.1,
-      "position": [
-        -96,
-        208
-      ],
-      "id": "[Aqui se inserta la información]",
-      "name": "Google Gemini Chat Model",
+      "id": "018e37cb-520f-480c-9877-3754da19146d",
+      "name": "base_de_conocimiento",
       "credentials": {
-        "googlePalmApi": {
-          "id": "[Aquí se inserta la información]",
-          "name": "Google Gemini(PaLM) Api account"
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
         }
       }
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "4dd2b36c-65c6-4f58-8dc1-d8f9bb1857aa",
-              "name": "Categoria",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "515530ef-db16-4c0b-baa2-a61fb2a7d554",
-              "name": "Consulta",
-              "value": "={{ $('When chat message received').item.json.chatInput }}",
-              "type": "string"
-            },
-            {
-              "id": "5c5ee034-957c-4a47-8084-a2846289584b",
-              "name": "ID",
-              "value": "={{ $('When chat message received').item.json.sessionId }}",
-              "type": "string"
-            },
-            {
-              "id": "23aab92c-81d7-498f-9831-20d78598a6c4",
-              "name": "output",
-              "value": "=",
-              "type": "string"
-            }
-          ]
-        },
+        "descriptionType": "manual",
+        "toolDescription": "Derivá el caso a un especialista humano del banco por correo. USALA cuando la base de conocimiento no devuelva un artículo útil, cuando el cliente solicite turnos en sucursal, solicite hablar con un supervisor o superior, solicite nombres, reclame de dinero, solicite reembolsos, pida cambio de domicilio, mencione temas legales, emplee tono de reclamo formal, o una consulta que la base de conocimiento no cubre.",
+        "sendTo": "gabyaiautomation@gmail.com",
+        "subject": "Chat sin responder",
+        "message": "=Se recibió la consulta que no fue posible responder:\n\nCanal: {{ $json['Canal '] }}\nFecha: {{ $json.Fecha }}\nHora: {{ $json.Hora }}\nID de sesión:  {{ $('When chat message received').item.json.sessionId }}\nMensaje:{{ $('When chat message received').item.json.chatInput }}\nEstado: Escalado a ejecutivo\n\nLe solicitamos que la analice y resuelva la duda del cliente.",
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
       "position": [
-        576,
-        -400
+        336,
+        304
       ],
-      "id": "a5b79ee1-53a6-4b0d-a580-c70551d27b1e",
-      "name": "Edit Fields - Alta"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "0ed4b188-79d2-4319-8bfc-97f6bfc2d184",
-              "name": "Categoria",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "8ea1fd1e-6b49-421e-bbb8-b876412f4163",
-              "name": "Consulta",
-              "value": "={{ $('When chat message received').item.json.chatInput }}",
-              "type": "string"
-            },
-            {
-              "id": "7a03158e-789f-4a2d-80e1-aab228dda4b3",
-              "name": "ID",
-              "value": "={{ $('When chat message received').item.json.sessionId }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        576,
-        -208
-      ],
-      "id": "95eb1a69-48c8-42ff-a36f-6daf29189a9f",
-      "name": "Edit Fields - Recepción"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "0c82cf79-09f5-4b9a-92fe-ee4f208859e4",
-              "name": "Categoria",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "b04cfbae-de4d-4855-bd65-9a194ef79234",
-              "name": "Consulta",
-              "value": "={{ $('When chat message received').item.json.chatInput }}",
-              "type": "string"
-            },
-            {
-              "id": "50384e87-1050-4c0f-a1cf-4f02f2084ec4",
-              "name": "ID",
-              "value": "={{ $('When chat message received').item.json.sessionId }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        576,
-        -16
-      ],
-      "id": "7dd44645-39b3-4e29-b3bc-e767ebe51c9d",
-      "name": "Edit Fields - Pago"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "5ad5e3af-db20-4bf2-8958-b9480f1cea35",
-              "name": "Categoria",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "55469734-ccd2-4bbb-8c9b-2ae6c8fd8a75",
-              "name": "Consulta",
-              "value": "={{ $('When chat message received').item.json.chatInput }}",
-              "type": "string"
-            },
-            {
-              "id": "db2356d7-a985-47a0-ae48-a5c04ceaf3e6",
-              "name": "ID",
-              "value": "={{ $('When chat message received').item.json.sessionId }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        576,
-        176
-      ],
-      "id": "a5dad945-6094-48e2-bb0e-e43a6fad726c",
-      "name": "Edit Fields - Baja"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "fd6971bb-adff-4d34-bccd-8ee5fae078a0",
-              "name": "Categoria",
-              "value": "={{ $json.output }}",
-              "type": "string"
-            },
-            {
-              "id": "d9b4d965-a868-4ee0-b948-bfdcfe0808a8",
-              "name": "Consulta",
-              "value": "={{ $('When chat message received').item.json.chatInput }}",
-              "type": "string"
-            },
-            {
-              "id": "6d6ab0d2-6811-4847-947e-0c06471a381a",
-              "name": "ID",
-              "value": "={{ $('When chat message received').item.json.sessionId }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        576,
-        368
-      ],
-      "id": "379e76d6-8983-45e1-912c-b6d6b8a90653",
-      "name": "Edit Fields - Robo"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "WcEkXCBXfRiLfjTS",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/WcEkXCBXfRiLfjTS",
-          "cachedResultName": "AI Adv - Entrega 2 - Worker 1 - Alta de producto"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
+      "id": "42a58dc4-3f42-4fd3-a98c-3cd3c1260c65",
+      "name": "Send a message in Gmail",
+      "webhookId": "3255e782-672d-4852-86c9-bfa90ca824fe",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
         }
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        880,
-        -400
-      ],
-      "id": "fb69ba5b-d3eb-42b1-bc92-c9953fa77a05",
-      "name": "Call 'AI Adv - Entrega 2 - Worker 1 - Alta de producto'"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "ZnyxAtDlBlLSqPtM",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/ZnyxAtDlBlLSqPtM",
-          "cachedResultName": "AI Adv - Entrega 2 - Worker 5 - Robo o extravío de producto"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        880,
-        368
-      ],
-      "id": "f804f471-f154-4411-8e8d-6a49f0efb835",
-      "name": "Call 'AI Adv - Entrega 2 - Worker 2 - Robo o extravío de producto'"
-    },
-    {
-      "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"Cliente\": {\n      \"type\": \"string\"\n    },\n    \"Requerimiento\": {\n    \"type\": \"string\"\n    },\n    \"Nombre\": {\n      \"type\": [\"string\"]\n    },\n    \"Apellido\": {\n      \"type\": [\"string\"]\n    },\n    \"DNI\": {\n      \"type\": [\"string\"]\n    },\n    \"ID\": {\n      \"type\": [\"string\"]\n    },\n    \"Categoria\": {\n      \"type\": [\"string\"]\n    },\n    \"Consulta\": {\n      \"type\": [\"string\"]\n    },\n    \"Mensaje enviado\": {\n      \"type\": [\"string\"]\n    }\n  },\n  \"required\": [\n    \"Cliente\",\n    \"Requerimiento\",\n    \"Nombre\",\n    \"Apellido\",\n    \"DNI\",\n    \"ID\",\n    \"Categoria\",\n    \"Consulta\",\n    \"Mensaje enviado\"\n  ]\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        3488,
-        48
-      ],
-      "id": "b2652f85-cebc-4852-8a12-dbe011a713b6",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "1c54b70c-49f8-4dc9-99db-e5d9dcbb1920",
-              "name": "Nombre",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data.Nombre }}",
-              "type": "string"
-            },
-            {
-              "id": "c7d794d0-8ecd-495c-90f9-dce9a04b6483",
-              "name": "Apellido",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data.Apellido }}",
-              "type": "string"
-            },
-            {
-              "id": "6cdaa0a2-ccf3-4681-a9de-ee357cd9bf1a",
-              "name": "DNI",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data.DNI }}",
-              "type": "number"
-            },
-            {
-              "id": "5409d2c5-a11a-4490-b978-a467cfbf0573",
-              "name": "Teléfono de contacto",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data[\"Teléfono de contacto\"] }}",
-              "type": "number"
-            },
-            {
-              "id": "2870578e-3a83-4c29-b3ba-100cce0e0dee",
-              "name": "Email",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data.Email }}",
-              "type": "string"
-            },
-            {
-              "id": "7be867c9-f969-44de-8bcc-4fa9a980f294",
-              "name": "Fecha",
-              "value": "={{ $('Send message and wait for response - email al usuario').item.json.data.respondedAt }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        3568,
-        -192
-      ],
-      "id": "d896cc01-751e-4504-8086-67a38c8730d5",
-      "name": "Edit Fields - Formatear salida"
+      }
     },
     {
       "parameters": {
@@ -503,256 +123,100 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.1,
       "position": [
-        3200,
-        48
+        -144,
+        304
       ],
-      "id": "[Aquí se inserta la información]",
-      "name": "Google Gemini Chat Model2",
+      "id": "c0f81479-ce00-49be-a36c-b01cf0a546c5",
+      "name": "Google Gemini Chat Model",
       "credentials": {
         "googlePalmApi": {
-          "id": "[Aquí se inserta la información]",
+          "id": "FEROqJaPDtYj0qQr",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
     {
       "parameters": {
-        "operation": "executeQuery",
-        "query": "Use Coder\n\nIF EXISTS (\n    SELECT 1\n    FROM Clientes\n    WHERE idCliente = '{{ $json.ID }}'\n)\nBEGIN\n    SELECT\n        'Si' as Cliente,\n        Nombre,\n        Apellido,\n        DNI,\n        idCliente as ID\n    FROM Clientes\n    WHERE idCliente = '{{ $json.ID }}';\nEND\nELSE\nBEGIN\n    SELECT\n        'No' as Cliente,\n        'El usuario debe iniciar el proceso de alta de cliente' as Requerimiento,\n        NULL as Nombre,\n        NULL as Apellido,\n        NULL as DNI,\n        NULL as ID;\nEND",
+        "sendTo": "gabyaiautomation@gmail.com",
+        "subject": "Log de registro - Tarea completada",
+        "message": "=<strong>=== LOG DE EJECUCIÓN - AGENTE SOPORTE ===</strong><br/><br/>\n\n<strong>Canal</strong>: {{ $('Edit Fields - Ajuste de formato').item.json['Canal '] }} <br>\n<strong>Fecha</strong>: {{ $('Edit Fields - Ajuste de formato').item.json.Fecha }} <br>\n<strong>Hora</strong>: {{ $('Edit Fields - Ajuste de formato').item.json.Hora }} <br>\n<strong>ID de sesión</strong>: {{ $('When chat message received').item.json.sessionId }}<br><br>\n\n--- ENTRADA ---<br/><br>\n<strong>Consulta</strong>: {{ $('When chat message received').item.json.chatInput }}.<br/><br/>\n\n--- PROCESO / TRAZABILIDAD ---<br/><br>\n<strong>Herramienta utilizada</strong>: base_de_conocimiento<br/>\n<strong>Parámetro de búsqueda</strong>: {{ $json.output.parametro_busqueda }}<br/>\n<strong>Código de referencia obtenido</strong>: {{ $json.output.codigo_referencia }}<br/>\n<strong>Escalado</strong>: {{ $json.output.escalado }}<br/><br/>\n\n--- SALIDA ---<br/><br>\n<strong>Se ha respondido con el mensaje</strong>: {{ $json.output.respuesta_usuario }} <br>\n\n",
         "options": {}
       },
-      "type": "n8n-nodes-base.microsoftSqlTool",
-      "typeVersion": 1.2,
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
       "position": [
-        3344,
-        48
+        368,
+        0
       ],
-      "id": "2846fcda-3998-4246-997b-750b44e78d57",
-      "name": "Microsoft SQL1",
+      "id": "9cbd4133-7145-4fcc-8dfc-eb29ecb5664c",
+      "name": "Send a message",
+      "webhookId": "0e2db160-b8aa-495c-889f-ddc91633659d",
       "credentials": {
-        "microsoftSql": {
-          "id": "WH0FZxCJ2LXISNSj",
-          "name": "Microsoft SQL account"
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
         }
       }
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=Empleá la herramienta de base de datos para consultar los datos del cliente con el {{ $json.data.DNI }} y devolver la información.\nAgregá a esta información el tipo de consulta {{ $('Edit Fields - Recepción').item.json.Categoria }} y el mensaje original {{ $('Edit Fields - Recepción').item.json.Consulta }}",
-        "hasOutputParser": true,
-        "options": {
-          "systemMessage": "=Sos un asistente ejecutivo del banco.\n\nUtilizá exclusivamente la herramienta SQL para consultar la información del cliente utilizando el ID recibido.\n\nANTES de responder, debés ejecutar la consulta SQL correspondiente.\n\nReglas:\n\n1. Si no existe un cliente para el ID recibido:\n   devolver únicamente:\n\n{\n  \"Cliente\": \"No\",\n  \"Nombre\": \"\",\n  \"Apellido\": \"\",\n  \"DNI\": \"\",\n  \"ID\": \"\",\n  \"Categoria\": \"\",\n  \"Consulta\": \"\",\n  \"Mensaje Enviado\": \"No se encontró información para el cliente consultado.\"\n}\n\n2. Si el cliente existe y la fecha de entrega es NULL o está vacía:\n   - Redactá una comunicación personalizada dirigida al cliente.\n   - Informá que hubo una demora en la entrega del producto.\n   - Indicá que recibirá el producto dentro de los próximos 10 días hábiles.\n   - El mensaje debe ser cordial, empático y profesional.\n   - El mensaje no debe superar las 200 palabras.\n   - Completá el campo \"Mensaje Enviado\" con el texto generado.\n\nDevolver:\n\n{\n  \"Cliente\": \"Si\",\n  \"Nombre\": \"<Nombre>\",\n  \"Apellido\": \"<Apellido>\",\n  \"DNI\": \"<DNI>\",\n  \"ID\": \"<idCliente>\",\n  \"Categoria\": \"<Categoria>\",\n  \"Consulta\": \"<Consulta>\",\n  \"Mensaje Enviado\": \"<Mensaje>\"\n}\n\n3. Si el cliente existe y posee fecha de entrega:\n   - Informá la fecha de entrega registrada.\n   - Completá el campo \"Mensaje Enviado\" indicando que el producto fue entregado.\n\nDevolver:\n\n{\n  \"Cliente\": \"Si\",\n  \"Nombre\": \"<Nombre>\",\n  \"Apellido\": \"<Apellido>\",\n  \"DNI\": \"<DNI>\",\n  \"ID\": \"<idCliente>\",\n  \"Categoria\": \"<Categoria>\",\n  \"Consulta\": \"<Consulta>\",\n  \"Mensaje Enviado\": \"<Mensaje>\"\n}\n\nIMPORTANTE:\n\n- Respondé únicamente con un JSON válido.\n- No utilices markdown.\n- No utilices bloques ```json.\n- No agregues explicaciones.\n- No agregues texto antes ni después del JSON.\n- No devuelvas el JSON escapado.\n- La respuesta debe ser un único objeto JSON.\n- Todos los campos deben estar presentes en la respuesta."
-        }
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 3.1,
-      "position": [
-        3200,
-        -192
-      ],
-      "id": "bbf2981d-f3bf-4c75-b27f-da277f45ba6c",
-      "name": "AI Agent2"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "9OHcZ4GgbpxNIcsr",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/9OHcZ4GgbpxNIcsr",
-          "cachedResultName": "AI Adv - Entrega 2 - Worker 2 - Recepción del producto"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        880,
-        -208
-      ],
-      "id": "4aed6c5d-e743-4c15-a4d5-9c94a253a79a",
-      "name": "Call 'AI Adv - Entrega 2 - Worker 2 - Recepción del producto'"
-    },
-    {
-      "parameters": {
-        "content": "Ingresa el comentario del cliente",
-        "height": 96,
-        "width": 150,
-        "color": "#CA62D9"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -384,
-        -192
-      ],
-      "typeVersion": 1,
-      "id": "115d9fd1-4783-4ca4-962f-b4336f0b2d89",
-      "name": "Sticky Note"
-    },
-    {
-      "parameters": {
-        "content": "El agente lo analiza y le asigna una categoría",
-        "height": 96,
-        "width": 214,
-        "color": "#CA62D9"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -96,
-        -192
-      ],
-      "typeVersion": 1,
-      "id": "698232c1-6624-4ddf-9a95-60c2aa60e4f3",
-      "name": "Sticky Note1"
-    },
-    {
-      "parameters": {
-        "content": "Se asigna un sub flujo",
-        "height": 96,
-        "width": 150,
-        "color": "#CA62D9"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        240,
-        -192
-      ],
-      "typeVersion": 1,
-      "id": "bf5f33d5-2bb4-4e11-ae51-b8292f3427b1",
-      "name": "Sticky Note2"
-    },
-    {
-      "parameters": {
-        "content": "Se ordena el contenido",
-        "height": 80,
-        "width": 150,
-        "color": "#CA62D9"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        544,
-        -512
-      ],
-      "typeVersion": 1,
-      "id": "5484f304-303f-44f3-a5ad-630afe30ba3d",
-      "name": "Sticky Note3"
-    },
-    {
-      "parameters": {
-        "content": "Se asigna un sub workflow",
-        "height": 80,
-        "width": 150,
-        "color": "#CA62D9"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        848,
-        -512
-      ],
-      "typeVersion": 1,
-      "id": "474b2b7b-3011-4403-950d-e605d05fd057",
-      "name": "Sticky Note4"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "gKXABMCD6ecLtFVN",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/gKXABMCD6ecLtFVN",
-          "cachedResultName": "AI Adv - Entrega 2 - Worker 4 - Baja de Producto"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {
-          "waitForSubWorkflow": true
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        880,
-        176
-      ],
-      "id": "bdb0c4be-b6a9-49c4-9b73-76d3d2ff18a4",
-      "name": "Call 'AI Adv - Entrega 2 - Worker 4 - Baja de Producto'"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "L8nN1bYWwpkzxzog",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/L8nN1bYWwpkzxzog",
-          "cachedResultName": "AI Adv - Entrega 2 - Worker 3 - Pago del producto"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bfe71e1e-c3ef-46bd-b176-40e712d6fe6c",
+              "name": "Sesión",
+              "value": "={{ $json.sessionId }}",
+              "type": "string"
+            },
+            {
+              "id": "a688cfce-80c7-47f1-bb8c-6baea602c9ef",
+              "name": "Mensaje",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "d499ddd9-4325-4fd2-8db1-f5f99ce37a2a",
+              "name": "Fecha",
+              "value": "={{ new Date().toLocaleDateString('es-AR') }}",
+              "type": "string"
+            },
+            {
+              "id": "b20f2b95-bdaa-4921-b254-10b99bcc56b5",
+              "name": "Hora",
+              "value": "={{ new Date().toLocaleTimeString('es-AR', {   timeZone: 'America/Argentina/Buenos_Aires',   hour12: false }) }}",
+              "type": "string"
+            },
+            {
+              "id": "0ca51da9-ae0a-4339-9575-cabaec077c45",
+              "name": "Canal ",
+              "value": "Chat",
+              "type": "string"
+            }
+          ]
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.executeWorkflow",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -240,
+        0
+      ],
+      "id": "8b19c89b-8ea9-4b2c-a775-e8ed725e9a78",
+      "name": "Edit Fields - Ajuste de formato"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"parametro_busqueda\": \"Desconocimiento de compra\",\n  \"codigo_referencia\": \"T3\",\n  \"respuesta_usuario\": \"Para reportar una compra no reconocida debe iniciar el procedimiento correspondiente.\",\n  \"escalado\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
       "position": [
-        880,
-        -16
+        496,
+        304
       ],
-      "id": "1d14afee-4688-4dc3-b026-788d3f977693",
-      "name": "Call 'AI Adv - Entrega 2 - Worker 3 - Pago del producto'"
-    },
-    {
-      "parameters": {
-        "content": "Sub workflow desarrollado",
-        "height": 96,
-        "width": 150,
-        "color": "#1B811B"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        1216,
-        -400
-      ],
-      "typeVersion": 1,
-      "id": "7e96d163-0cc7-40f5-b587-66c0858282b9",
-      "name": "Sticky Note5"
-    },
-    {
-      "parameters": {
-        "content": "Sub workflow desarrollado",
-        "height": 96,
-        "width": 150,
-        "color": "#1B811B"
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        1216,
-        -208
-      ],
-      "typeVersion": 1,
-      "id": "53e82174-be4e-4734-b1aa-673743fc77dd",
-      "name": "Sticky Note6"
+      "id": "18c2ec74-17bb-4ce3-ac57-256e933d392f",
+      "name": "Structured Output Parser"
     }
   ],
   "pinData": {},
@@ -761,58 +225,41 @@
       "main": [
         [
           {
-            "node": "AI Agent",
+            "node": "Edit Fields - Ajuste de formato",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "AI Agent": {
-      "main": [
+    "Simple Memory": {
+      "ai_memory": [
         [
           {
-            "node": "Switch",
-            "type": "main",
+            "node": "AI Agent with Tool",
+            "type": "ai_memory",
             "index": 0
           }
         ]
       ]
     },
-    "Switch": {
-      "main": [
+    "base_de_conocimiento": {
+      "ai_tool": [
         [
           {
-            "node": "Edit Fields - Alta",
-            "type": "main",
+            "node": "AI Agent with Tool",
+            "type": "ai_tool",
             "index": 0
           }
-        ],
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
         [
           {
-            "node": "Edit Fields - Recepción",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields - Pago",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields - Baja",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields - Robo",
-            "type": "main",
+            "node": "AI Agent with Tool",
+            "type": "ai_tool",
             "index": 0
           }
         ]
@@ -822,125 +269,44 @@
       "ai_languageModel": [
         [
           {
-            "node": "AI Agent",
+            "node": "AI Agent with Tool",
             "type": "ai_languageModel",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields - Alta": {
+    "AI Agent with Tool": {
       "main": [
         [
           {
-            "node": "Call 'AI Adv - Entrega 2 - Worker 1 - Alta de producto'",
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Edit Fields - Recepción": {
+    "Edit Fields - Ajuste de formato": {
       "main": [
         [
           {
-            "node": "Call 'AI Adv - Entrega 2 - Worker 2 - Recepción del producto'",
+            "node": "AI Agent with Tool",
             "type": "main",
             "index": 0
           }
         ]
-      ]
-    },
-    "Edit Fields - Pago": {
-      "main": [
-        [
-          {
-            "node": "Call 'AI Adv - Entrega 2 - Worker 3 - Pago del producto'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields - Baja": {
-      "main": [
-        [
-          {
-            "node": "Call 'AI Adv - Entrega 2 - Worker 4 - Baja de Producto'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields - Robo": {
-      "main": [
-        [
-          {
-            "node": "Call 'AI Adv - Entrega 2 - Worker 2 - Robo o extravío de producto'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call 'AI Adv - Entrega 2 - Worker 1 - Alta de producto'": {
-      "main": [
-        []
-      ]
-    },
-    "Call 'AI Adv - Entrega 2 - Worker 2 - Robo o extravío de producto'": {
-      "main": [
-        []
       ]
     },
     "Structured Output Parser": {
       "ai_outputParser": [
         [
           {
-            "node": "AI Agent2",
+            "node": "AI Agent with Tool",
             "type": "ai_outputParser",
             "index": 0
           }
         ]
-      ]
-    },
-    "Google Gemini Chat Model2": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent2",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Microsoft SQL1": {
-      "ai_tool": [
-        [
-          {
-            "node": "AI Agent2",
-            "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Agent2": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields - Formatear salida",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Call 'AI Adv - Entrega 2 - Worker 2 - Recepción del producto'": {
-      "main": [
-        []
       ]
     }
   },
@@ -950,12 +316,12 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "1720ce30-3f1c-4f0d-a3d6-9b4b9f792f00",
+  "versionId": "6cbbf1e0-2673-4a0b-ac0f-196f3ed73936",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bd5c9974988bfb0bf31a38aa3ae06f81f02008e715f8b5a4f88f59e87d278a3b"
   },
   "nodeGroups": [],
-  "id": "HEco4PJFnY6Rbj7l",
+  "id": "E9rCtYsAeefLDrIP",
   "tags": []
 }
