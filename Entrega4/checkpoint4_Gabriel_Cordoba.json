@@ -1,0 +1,3170 @@
+{
+  "name": "AI Adv - Entrega 4 - Ajustado",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX"
+            }
+          ]
+        },
+        "filters": {
+          "readStatus": "unread"
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -1232,
+        96
+      ],
+      "id": "2cdeb83e-1c6b-4ad0-82f5-4055fa2b8f80",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Recibes la siguiente información:\n\nRemitente: {{ $json.Email }}\nAsunto: {{ $json.Asunto }}\nMensaje: {{ $json['Mensaje'] }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "## ROL\nEres un analista bancario experto en atención al cliente y gestión de productos financieros. Tu tono es profesional, objetivo y preciso.\n\n## OBJETIVO\nAnalizar los mensajes entrantes de los clientes, clasificarlos según su naturaleza y redactar un borrador de respuesta que luego será revisado por un agente humano. NUNCA debes simular que envías el mensaje ni interactuar directamente como si el envío fuera automático.\n\n## REGLAS DE NEGOCIO\n1. **Alcance bancario:** Solo gestionas consultas vinculadas a productos financieros del banco (tarjetas de crédito/débito, préstamos, créditos hipotecarios, inversiones, cajas de ahorro, cuentas corrientes, etc.).\n2. **Consultas fuera de alcance:** Si el mensaje trata sobre productos o servicios no bancarios (autos, vuelos, viajes, electrodomésticos, turnos médicos, etc.), debes:\n   - Asignar **Tipo de producto:** \"No aplica\".\n   - Asignar **Prioridad:** \"Baja\".\n   - Redactar un **Borrador** centrado en informar: *\"El servicio o producto por el cual consulta no es brindado ni comercializado por el banco.\"*\n3. **Criterios de Prioridad:**\n   - **Urgente:** Reportes de fraude, robo/extravío de tarjetas, bloqueos de cuenta o fallos críticos que impiden operar.\n   - **Alta:** Reclamos formales, quejas graves o solicitudes de baja de productos.\n   - **Media:** Solicitudes de nuevos productos, demoras en la entrega o reclamos..\n   - **Baja:** Consultas informativas simples o temas no bancarios.\n4. **Regla de veracidad:** Nunca inventes políticas, tasas ni requisitos del banco que no estén explícitos en el mensaje o en el contexto proporcionado.\n\n## FORMATO DE SALIDA\nResponde únicamente completando la siguiente plantilla, sin agregar saludos ni comentarios adicionales fuera de ella:\n\n* **Categoría:** [Elegir una: Solicitud de producto | Queja | Solicitud de baja | Reclamo | Consulta general | Solicitud de atención con representante]\n* **Tipo de producto:** [Identificar el producto bancario mencionado o \"No aplica\"]\n* **Prioridad:** [Elegir una: Baja | Media | Alta | Urgente]\n* **Estado:** [Indicar si la información proporcionada por el cliente es \"Suficiente\" o \"Insuficiente\" para dar curso a la gestión, y detallar brevemente qué datos faltan si corresponde]\n* **Borrador:** [Borrador de respuesta al usuario que revisará una persona. Este contendrá el titulo del asunto y el cuerpo.]\n  * **Asunto:** [Título claro y formal para el correo o ticket]\n  * **Cuerpo:** [Texto de respuesta cordial, claro y profesional listo para ser revisado por un humano]\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1504,
+        80
+      ],
+      "id": "848e1d5f-a7d0-46d7-9379-eb93199a47bb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1440,
+        304
+      ],
+      "id": "75a102f1-080b-4d0b-aa53-ef807fc76ef1",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FEROqJaPDtYj0qQr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02921e11-af25-4f56-a982-160438918782",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1cf2c859-7504-4723-8848-e3f93f18c5e0",
+              "name": "Fecha del Email",
+              "value": "={{ $json.fecha_email }}",
+              "type": "string"
+            },
+            {
+              "id": "588e1ded-64a2-4e4d-88b8-5b5520c4f293",
+              "name": "Remitente",
+              "value": "={{ $('Nodo If - Code in JavaScript').item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "fab58353-cdf2-41cb-91ef-a6bec19517e7",
+              "name": "Asunto",
+              "value": "={{ $('Nodo If - Code in JavaScript').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "178e6d1e-c099-4c99-b1d9-a9486edb70f7",
+              "name": "Procesar",
+              "value": "={{ $('Nodo If - Code in JavaScript').item.json.procesar }}",
+              "type": "boolean"
+            },
+            {
+              "id": "38749692-8ac2-4889-8137-fe9f694019ee",
+              "name": "Mensaje",
+              "value": "={{ $json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        256
+      ],
+      "id": "f7c327e2-79f7-42b7-9ef2-d3438dca3864",
+      "name": "Edit Fields - Rechazado"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "588e1ded-64a2-4e4d-88b8-5b5520c4f293",
+              "name": "Nombre del remitente",
+              "value": "={{ $('Gmail Trigger').item.json.From.match(/^([^<]+)/)?.[1].trim() || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c72a8514-99a9-44c7-b656-518844f4ddd7",
+              "name": "Email",
+              "value": "={{ $('Gmail Trigger').item.json.From.match(/<([^>]+)>/)?.[1] || $item.json.From }}",
+              "type": "string"
+            },
+            {
+              "id": "38b173dd-e513-4a14-820e-9b6fbec3b765",
+              "name": "Fecha del Email",
+              "value": "={{ DateTime.fromMillis(Number($('Gmail Trigger').item.json.internalDate)).setZone('America/Argentina/Buenos_Aires').toFormat('yyyy-MM-dd HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "fab58353-cdf2-41cb-91ef-a6bec19517e7",
+              "name": "Asunto",
+              "value": "={{ $('Gmail Trigger').item.json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "178e6d1e-c099-4c99-b1d9-a9486edb70f7",
+              "name": "Estado",
+              "value": "={{ $('SQL - ¿Para procesar?').item.json.estado }}",
+              "type": "string"
+            },
+            {
+              "id": "95aa672b-0727-4bf0-b006-acd797f5a57e",
+              "name": "Mensaje",
+              "value": "={{ $('Gmail Trigger').item.json.snippet }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1072,
+        -16
+      ],
+      "id": "0ad82e6b-9b41-4b4e-ad98-fee5d70d6eca",
+      "name": "Edit Fields - A procesar"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"categoria\": \"Reclamo\",\n  \"tipo_producto\": \"Tarjeta de crédito\",\n  \"prioridad\": \"Alta\",\n  \"estado\": \"Información suficiente\",\n  \"resumen\": \"El cliente reporta consumos desconocidos.\",\n  \"borrador\": {\n    \"asunto\": \"Recepción de reclamo\",\n    \"cuerpo\": \"Estimado cliente...\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1712,
+        304
+      ],
+      "id": "b521c1f9-b92b-4bad-ba2d-275a09ed64ba",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "content": "Se verifica que el correo tenga cuerpo",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -800,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "434e783e-d6e9-40b2-8c4b-44f926dfc3c0",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "Condicional de procesamiento",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "5ddfbc04-e8c2-4d56-9af9-6f43c40cdd03",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Ordena la información del email que debió ser filtrado.",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        880,
+        128
+      ],
+      "typeVersion": 1,
+      "id": "129e48e8-97c7-40f8-8330-139c910c3514",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Inserta la información en la tabla EmailBasura",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1120,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "3155a50e-a6a3-4be8-aac4-4bbfbbe3c7df",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Inserta un registro a revisar para incluir en los filtros de correo",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1360,
+        464
+      ],
+      "typeVersion": 1,
+      "id": "5431ea1c-4ad8-44da-85d0-74f5707c87dd",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Pasaron filtro",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $('Edit Fields - Rechazado').item.json.id }}",
+            "Fecha": "={{ $('Edit Fields - Rechazado').item.json['Fecha del Email'] }}",
+            "Remitente": "={{ $('Edit Fields - Rechazado').item.json.Remitente }}",
+            "Asunto": "={{ $('Edit Fields - Rechazado').item.json.Asunto }}",
+            "Mensaje": "={{ $('Edit Fields - Rechazado').item.json.Mensaje }}",
+            "Procesar": "={{ $('Edit Fields - Rechazado').item.json.Procesar }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Remitente",
+              "displayName": "Remitente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Procesar",
+              "displayName": "Procesar",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        592
+      ],
+      "id": "1bfb9d1a-9cf6-4e96-8cf9-58695293bda7",
+      "name": "Append - Emails Basura",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "use Coder\n\ninsert into EmailBasura\n           (Id, Fecha, Remitente, Asunto, Mensaje, Procesar)\n     values\n           ('{{ $json.id }}', '{{ $json['Fecha del Email'] }}', '{{ $json.Remitente }}', '{{ $json.Asunto }}', '{{ $json.Mensaje }}', '{{ $json.Procesar }}')\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        1152,
+        416
+      ],
+      "id": "30acbac4-83e8-4ad2-99a2-90ccd6dcae59",
+      "name": "SQL - Insert Email Basura",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Toma la información de los emails a procesar",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1040,
+        -128
+      ],
+      "typeVersion": 1,
+      "id": "dc506ba4-184f-4201-999b-1aaa8d7686b7",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5fff0763-f34b-468f-9df4-737f09011cab",
+              "name": "id de sesión",
+              "value": "={{ $('Gmail Trigger').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "70a32e07-6078-46b9-a191-a3807b0dfef4",
+              "name": "Nombre del remitente",
+              "value": "={{ $('Edit Fields - A procesar').item.json['Nombre del remitente'] }}",
+              "type": "string"
+            },
+            {
+              "id": "c42b01c5-a017-4aa1-a5b1-0f0185c42b34",
+              "name": "Email Remitente",
+              "value": "={{ $('Edit Fields - A procesar').item.json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "13de8103-6bbf-49dc-b9ca-4de9972094ce",
+              "name": "Fecha del Email",
+              "value": "={{ $('Edit Fields - A procesar').item.json['Fecha del Email'] }}",
+              "type": "string"
+            },
+            {
+              "id": "bc1d4793-b746-49c4-ab1c-9fd4bc79ebf7",
+              "name": "Prioridad",
+              "value": "={{ $json.output.prioridad }}",
+              "type": "string"
+            },
+            {
+              "id": "f51b1d17-fefb-4c18-9723-d923fb1d2d21",
+              "name": "Asunto",
+              "value": "={{ $('Edit Fields - A procesar').item.json.Asunto }}",
+              "type": "string"
+            },
+            {
+              "id": "8c50e335-17f4-4690-999b-4d5d5d055be5",
+              "name": "Mensaje",
+              "value": "={{ $('Edit Fields - A procesar').item.json.Mensaje }}",
+              "type": "string"
+            },
+            {
+              "id": "5e38f024-c037-461a-a782-e0981c5c7bcd",
+              "name": "Categoría del email",
+              "value": "={{ $json.output.categoria }}",
+              "type": "string"
+            },
+            {
+              "id": "903cb603-af6b-49a5-b833-9ac2bf26469a",
+              "name": "Tipo de producto",
+              "value": "={{ $json.output.tipo_producto }}",
+              "type": "string"
+            },
+            {
+              "id": "25a79abb-3c21-476e-9342-021b2d888077",
+              "name": "Estado",
+              "value": "={{ $json.output.estado }}",
+              "type": "string"
+            },
+            {
+              "id": "7208b483-a0f8-4047-960b-b4350c8ba21b",
+              "name": "Resumen",
+              "value": "={{ $json.output.resumen }}",
+              "type": "string"
+            },
+            {
+              "id": "a1a92a86-c22c-404c-826f-7dd59c780193",
+              "name": "Borrador de asunto",
+              "value": "={{ $json.output.borrador.asunto }}",
+              "type": "string"
+            },
+            {
+              "id": "e60ca408-b401-441d-aacc-ba4f00a20051",
+              "name": "Borrador de cuerpo de email",
+              "value": "={{ $json.output.borrador.cuerpo }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1872,
+        80
+      ],
+      "id": "38e13a25-7cd8-41f5-93a6-eca78c4ee191",
+      "name": "Edit Fields - Ordenar la información"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "use Coder\n\ndeclare @idcliente int;\nset @idcliente = (select idCliente from Clientes where Email = '{{ $json['Email Remitente'] || 'null' }}')\n\nif exists (\n    select 1\n    from EmailaProcesar\n    WHERE sesionID = '{{ $json['id de sesión'] }}' and Fecha = '{{ $json['Fecha del Email'] }}'\n)\nBEGIN\n\n    update EmailaProcesar\n    set\n        sesionID = '{{ $json['id de sesión'] }}',\n        ID = @idcliente,\n        Nombre = '{{ $json['Nombre del remitente'] }}',\n        Email = '{{ $json['Email Remitente'] }}',\n        Fecha = '{{ $json['Fecha del Email'] }}',\n        Prioridad = '{{ $json.Prioridad }}',\n        Asunto = '{{ $json.Asunto }}',\n        Mensaje = '{{ $json.Mensaje }}',\n        Categoria = '{{ $json['Categoría del email'] }}',\n        Producto = '{{ $json['Tipo de producto'] }}',\n        Estado = '{{ $json.Estado }}',\n        Resumen = '{{ $json.Resumen }}',\n        BorradorAsunto = '{{ $json['Borrador de asunto'] }}',\n        BorradorCuerpo = '{{ $json['Borrador de cuerpo de email'] }}'\n    where sesionID = '{{ $json['id de sesión'] }}' and Fecha = '{{ $json['Fecha del Email'] }}';\nend\nelse \nbegin\n    insert into EmailaProcesar (\n        sesionID,\n        ID,\n        Nombre,\n        Email,\n        Fecha,\n        Prioridad,\n        Asunto,\n        Mensaje,\n        Categoria,\n        Producto,\n        Estado,\n        Resumen,\n        BorradorAsunto,\n        BorradorCuerpo\n    )\n    values (\n        '{{ $json['id de sesión'] }}',\n        @idcliente,\n        '{{ $json['Nombre del remitente'] }}',\n        '{{ $json['Email Remitente'] }}',\n        '{{ $json['Fecha del Email'] }}',\n        '{{ $json.Prioridad }}',\n        '{{ $json.Asunto }}',\n        '{{ $json.Mensaje }}',\n        '{{ $json['Categoría del email'] }}',\n        '{{ $json['Tipo de producto'] }}',\n        '{{ $json.Estado }}',\n        '{{ $json.Resumen }}',\n        '{{ $json['Borrador de asunto'] }}',\n        '{{ $json['Borrador de cuerpo de email'] }}'\n    );\nend\n\nselect sesionID,\n        @idcliente as 'ID',\n        Nombre,\n        Email,\n        Fecha,\n        Prioridad,\n        Asunto,\n        Mensaje,\n        Categoria,\n        Producto,\n        Estado,\n        Resumen,\n        BorradorAsunto,\n        BorradorCuerpo\nfrom EmailaProcesar\nwhere sesionID = '{{ $json['id de sesión'] }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        2112,
+        80
+      ],
+      "id": "d8736009-4b86-4bbb-b5b6-194217646b9e",
+      "name": "SQL - Update/Insert y verifica si es cliente",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 222958166,
+          "mode": "list",
+          "cachedResultName": "Procesar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=222958166"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "SesionID": "={{ $json.sesionID }}",
+            "ID": "={{ $json.ID }}",
+            "Nombre": "={{ $json.Nombre }}",
+            "Email": "={{ $json.Email }}",
+            "Fecha": "={{ $json.Fecha }}",
+            "Asunto": "={{ $json.Asunto }}",
+            "Mensaje": "={{ $json.Mensaje }}",
+            "Categoria": "={{ $json.Categoria }}",
+            "Producto": "={{ $json.Producto }}",
+            "Estado": "={{ $json.Estado }}",
+            "Resumen": "={{ $json.Resumen }}",
+            "BorradorAsunto": "={{ $json.BorradorAsunto }}",
+            "BorradorCuerpo": "={{ $json.BorradorCuerpo }}",
+            "Prioridad": "={{ $json.Prioridad }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2352,
+        80
+      ],
+      "id": "750bafa4-31b7-4155-bbd9-05e4518d7750",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0CHMQ9CYR1",
+          "mode": "list",
+          "cachedResultName": "soporteoperaciones"
+        },
+        "text": "=Acción: {{ $json['Acción'] }}\nObjetivo: Contactar al cliente para consultar el motivo de su email.\n\nAsunto: {{ $('SQL - Update Operaciones').item.json.Asunto }}\nNombre: {{ $('SQL - Update Operaciones').item.json.Nombre }}\nEmail: {{ $('SQL - Update Operaciones').item.json.Email }}\nID de cliente: {{ $('SQL - Update Operaciones').item.json.ID }}\nPrioridad: \n\nMensaje: {{ $('SQL - Update Operaciones').item.json.Mensaje }}\nProducto: {{ $('SQL - Update Operaciones').item.json.Producto }}\n\n\n",
+        "otherOptions": {
+          "link_names": true
+        }
+      },
+      "id": "f06d998d-4dc6-458c-affa-02dc4da3dc5c",
+      "name": "Slack - Aviso a Operaciones",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        3712,
+        400
+      ],
+      "webhookId": "dc60fd32-124c-4b92-966f-0b324772a1d1",
+      "notesInFlow": false,
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "ZFRx6RlSxY5uQM0e",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Agente con perfil de analista de productos bancarios",
+        "height": 80,
+        "width": 214,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1504,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "f1a2c44c-0e2f-46c5-993f-cfe0c6ee685f",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "Aplica a o no el email para ser analizado por el ejecutivo",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2560,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "0eefaa2f-28f1-4ae3-a7fa-0263cb059e4e",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "Aviso al equipo de operaciones para que revise campañas relacionadas con la consulta.",
+        "height": 112,
+        "width": 182,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3664,
+        256
+      ],
+      "typeVersion": 1,
+      "id": "c25f7a74-4f0f-4518-b99c-85c785956103",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "¿Es cliente?",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2864,
+        304
+      ],
+      "typeVersion": 1,
+      "id": "55471760-542c-40af-af86-b65cade6d4a6",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "Asignar al equipo de marketing para que responda el mensaje e incluya a la persona en programas de captación de clientes.",
+        "height": 128,
+        "width": 182,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3664,
+        576
+      ],
+      "typeVersion": 1,
+      "id": "f523c1a8-7033-4ecc-bbe2-a1b0092b34a2",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "Se actualiza la tabla de seguimiento",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2080,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "3bb0e3af-c6a9-442d-9159-1ebe80750397",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "Se actualiza el excel compartido con el ejecutivo y gerencia",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2320,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "c4f2d5ef-c35f-4854-94ac-e3918bb250c9",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "d338927b-ba2a-4622-a079-b43358f8645a",
+              "leftValue": "={{ $('SQL - ¿Para procesar?').item.json.estado }}",
+              "rightValue": "No procesado",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        656,
+        80
+      ],
+      "id": "c6618953-6566-41b5-8bc6-00e0ea3b93d9",
+      "name": "If - ¿Se procesa?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "e02a9104-8be6-4f8b-8770-95a23efdc0ea",
+              "leftValue": "={{ $json.ID }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2896,
+        416
+      ],
+      "id": "fc14b25e-b205-46a9-81fa-5c71ba23b9ba",
+      "name": "If - ¿Es cliente?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "    use coder\n    update EmailaProcesar\n    set\n        Accion = 'Asignar a ejecutivo',\n        FechaAccion = GETDATE()\n    where sesionID = '{{ $('Append or update row in sheet').item.json.SesionID }}' and Fecha = '{{ $('Append or update row in sheet').item.json.Fecha }}';\n\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion\nfrom EmailaProcesar\nwhere sesionID = '{{ $json.SesionID }}' and Fecha = '{{ $json.Fecha }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        64
+      ],
+      "id": "247aea60-ff85-4ee2-bd18-ff6426a177e8",
+      "name": "SQL - Update Ejecutivo",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "    use coder\n\n    update EmailaProcesar\n    set\n        Accion = 'Asignar a equipode operaciones',\n        FechaAccion = GETDATE()\n    where sesionID = '{{ $('Append or update row in sheet').item.json.SesionID }}' and Fecha = '{{ $('Append or update row in sheet').item.json.Fecha }}';\n\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion\nfrom EmailaProcesar\nwhere sesionID = '{{ $json.SesionID }}' and Fecha = '{{ $json.Fecha }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        400
+      ],
+      "id": "b00e6b4e-8a7d-4832-9bfa-28050f5efb28",
+      "name": "SQL - Update Operaciones",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Actualizar la información en la tabla.",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3216,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "40e03b0a-5eda-46e2-b851-fdbf534224ad",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "Email al ejecutivo con el caso a analizar",
+        "height": 80,
+        "width": 182,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3664,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "ff1d010c-3077-4332-b8d0-5118c8c845d5",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "content": "Actualizar la información en la planilla de excel compartida.",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        3440,
+        -64
+      ],
+      "typeVersion": 1,
+      "id": "c10f4781-daea-48d9-aa16-32260e84b44a",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "Actualizar la información en la planilla de excel compartida.",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4368,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "919c7b6d-fa75-4f53-98a3-ee1d85187cfa",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "Actualizar la información en la tabla.",
+        "height": 80,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4144,
+        288
+      ],
+      "typeVersion": 1,
+      "id": "1ff6cd5b-7d09-4e70-a72e-e14ec61df2da",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "    use coder\n\n    update EmailaProcesar\n    set\n        Asignado = 'Si',\n        FechaAsignacion = GETDATE(),\n        idOperacion = '{{ $json.id ?? $json.channel}}'\n    where sesionID = '{{ $('Append or update row in sheet').item.json.SesionID }}' and Fecha = '{{ $('Append or update row in sheet').item.json.Fecha }}';\n\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion,\n    idOperacion\nfrom EmailaProcesar\nwhere sesionID = '{{ $('Gmail Trigger').item.json.id }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        4176,
+        400
+      ],
+      "id": "a345622b-2771-4661-9e5d-8233080d3f89",
+      "name": "SQL - Update Asignado",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "    use coder\n\n    update EmailaProcesar\n    set\n        Accion = 'Asignar a equipo de marketing para sumar a campaña de captación',\n        FechaAccion = GETDATE()\n    where sesionID = '{{ $('Append or update row in sheet').item.json.SesionID }}' and Fecha = '{{ $('Append or update row in sheet').item.json.Fecha }}';\n\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion\nfrom EmailaProcesar\nwhere sesionID = '{{ $json.SesionID }}' and Fecha = '{{ $json.Fecha }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        3248,
+        736
+      ],
+      "id": "60cedc9c-914b-4460-9eea-7f614de64176",
+      "name": "SQL - Update Marketing",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 222958166,
+          "mode": "list",
+          "cachedResultName": "Procesar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=222958166"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Acción": "Asignar a ejecutivo",
+            "SesionID": "={{ $json.sesionID }}",
+            "FechaAccion": "={{ $json.FechaAccion }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        64
+      ],
+      "id": "25cbd708-48df-4335-9caa-4f42857e0783",
+      "name": "Append or update - Ejecutivo",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 222958166,
+          "mode": "list",
+          "cachedResultName": "Procesar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=222958166"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Acción": "={{ $json.Accion }}",
+            "FechaAccion": "={{ $json.FechaAccion }}",
+            "SesionID": "={{ $json.sesionID }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        400
+      ],
+      "id": "6dd611dd-3593-4f60-9e8d-36c1ba7e3898",
+      "name": "Append or update - Operaciones",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 222958166,
+          "mode": "list",
+          "cachedResultName": "Procesar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=222958166"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Acción": "Asignar a equipo de marketing para sumar a campaña de captación",
+            "FechaAccion": "={{ $json.FechaAccion }}",
+            "SesionID": "={{ $json.sesionID }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "idOperacion",
+              "displayName": "idOperacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3472,
+        736
+      ],
+      "id": "497f50ba-789d-42ec-9f52-a15215d6c73a",
+      "name": "Append or update - Marketing",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "Incluir en campaña de generación de clientes",
+        "message": "=<h4 style=\"color:#1054A1;\">Se recibió la siguiente consulta:</h4>\n\n<strong>Fecha</strong>: {{ $('SQL - Update Marketing').item.json.Fecha }}<br/>\n<strong>Nombre</strong>: {{ $('SQL - Update Marketing').item.json.Nombre }}<br/>\n<strong>Email</strong>: {{ $('SQL - Update Marketing').item.json.Email }}<br/>\n<strong>Asunto</strong>: {{ $('SQL - Update Marketing').item.json.Asunto }}<br/>\n<strong>Mensaje</strong>: {{ $('SQL - Update Marketing').item.json.Mensaje }}<br/>\n<strong>Resumen</strong>: {{ $('SQL - Update Marketing').item.json.Resumen }}<br/><br/>\n\n<h4 style=\"color:#1054A1;\">Respuesta propuesta</h4>\n\n<strong>Asunto</strong>: {{ $('SQL - Update Marketing').item.json.BorradorAsunto }}<br/>\n<strong>Mensaje</strong>: {{ $('SQL - Update Marketing').item.json.BorradorCuerpo }}<br/><br/><br/>\n\nPor favor, responder el email con aprobación o rechazo. En caso de ser este último, indicar el motivo.<br/><br/>\n\n<h3>Sumar a las campañas de captación de clientes</h3><br/>\n\n¡Muchas gracias!<br/><br/>\n\nGerencia Operativa<br/><br/>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3712,
+        736
+      ],
+      "id": "dd35f0ed-a58b-47ad-867f-d426cfef8d54",
+      "name": "Send a message - Marketing",
+      "webhookId": "aa05b20a-45aa-4a39-8ad5-4870b9ea4b35",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "=Revisión de Consulta - Prioridad  {{ $('SQL - Update Ejecutivo').item.json.Prioridad }}",
+        "message": "=<h4 style=\"color:#1054A1;\">Se recibió la siguiente consulta:</h4>\n\n<strong>Fecha</strong>: {{ $('SQL - Update Ejecutivo').item.json.Fecha }}<br/>\n<strong>Nombre</strong>: {{ $('SQL - Update Ejecutivo').item.json.Nombre }}<br/>\n<strong>Email</strong>: {{ $('SQL - Update Ejecutivo').item.json.Email }}<br/>\n<strong>Asunto</strong>: {{ $('SQL - Update Ejecutivo').item.json.Asunto }}<br/>\n<strong>Mensaje</strong>: {{ $('SQL - Update Ejecutivo').item.json.Mensaje }}<br/>\n<strong>Resumen</strong>: {{ $('SQL - Update Ejecutivo').item.json.Resumen }}<br/><br/>\n\n<h4 style=\"color:#1054A1;\">Respuesta propuesta</h4>\n\n<strong>Asunto</strong>: {{ $('SQL - Update Ejecutivo').item.json.BorradorAsunto }}<br/>\n<strong>Mensaje</strong>: {{ $('SQL - Update Ejecutivo').item.json.BorradorCuerpo }}<br/><br/><br/>\n\nPor favor, responder el email con aprobación o rechazo. En caso de ser este último, indicar el motivo.<br/><br/>\n\n¡Muchas gracias!<br/><br/>\n\nGerencia Operativa<br/><br/>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3712,
+        64
+      ],
+      "id": "1c4d4461-f175-4818-b084-5a0f7d66893f",
+      "name": "Send a message - Ejecutivo",
+      "webhookId": "536d931f-ab3b-4da1-8acf-ee2aec600980",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7db0bb83-4157-445a-af09-8e2de9d2c571",
+              "leftValue": "={{ $json.estado }}",
+              "rightValue": "No procesado",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        192,
+        96
+      ],
+      "id": "57e52721-7085-488e-807d-81cc0262b3ae",
+      "name": "If - ¿Mensaje nuevo?"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "use coder\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion,\n    idOperacion\nfrom EmailaProcesar\nwhere idOperacion = '{{ $json.idOperacion }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        4640,
+        400
+      ],
+      "id": "783d4140-c91f-4694-b171-56aca552d075",
+      "name": "SQL - LOG",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Trazabilidad dela operación",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        4608,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "43b544d6-e982-4e1d-80af-3e2abe0410c4",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "Se registra el intento de reproceso",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        448,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "fe4232f8-20b5-4014-8a61-d2a4d8d02753",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "use coder\nselect\n    case \n        when count(*) > 0 then 'Procesado' \n        else 'No procesado' \n    end as estado,\n    max(sesionID) AS sesionID,\n    max(Fecha) AS Fecha\nfrom EmailaProcesar\nwhere sesionID = '{{ $('Gmail Trigger').item.json.id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -48,
+        96
+      ],
+      "id": "b2410ca1-56ce-48c3-abf7-e2e4cdac99bb",
+      "name": "SQL - ¿Para procesar?",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Se revisa si el mensaje fue procesado o no. Pudo haber un error humano o de sistema que marque como no leido un correo y este se reprocese nuevamente.",
+        "height": 208,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -80,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "b076bea8-08cc-4568-a473-3e6d6479e186",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "content": "Condicional que divide emails procesados de los no procesados\n",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "d0655e33-1485-47ed-9026-e426904817d5",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "use coder\nselect\n  \tsesionID,\n\tID,\n\tNombre,\n\tEmail,\n\tCONVERT(VARCHAR(19), Fecha, 120) as 'Fecha',\n    Prioridad,\n\tAsunto,\n\tMensaje,\n\tCategoria,\n\tProducto,\n\tEstado,\n\tResumen,\n\tBorradorAsunto,\n\tBorradorCuerpo,\n\tAccion,\n\tFechaAccion,\n\tAsignado,\n\tFechaAsignacion,\n    idOperacion\nfrom EmailaProcesar\nwhere sesionID = '{{ $json.sesionID }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        464,
+        304
+      ],
+      "id": "a8ed8903-eefe-47cd-b607-407cd5cf86b7",
+      "name": "SQL - Insert email ya procesado",
+      "credentials": {
+        "microsoftSql": {
+          "id": "WH0FZxCJ2LXISNSj",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 575579516,
+          "mode": "list",
+          "cachedResultName": "Intento de reproceso",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=575579516"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "SesionID": "={{ $json.sesionID }}",
+            "ID": "={{ $json.ID }}",
+            "Nombre": "={{ $json.Nombre }}",
+            "Email": "={{ $json.Email }}",
+            "Fecha": "={{ $json.Fecha }}",
+            "Prioridad": "={{ $json.Prioridad }}",
+            "Asunto": "={{ $json.Asunto }}",
+            "Mensaje": "={{ $json.Mensaje }}",
+            "Categoria": "={{ $json.Categoria }}",
+            "Producto": "={{ $json.Producto }}",
+            "Estado": "={{ $json.Estado }}",
+            "Resumen": "={{ $json.Resumen }}",
+            "BorradorAsunto": "={{ $json.BorradorAsunto }}",
+            "BorradorCuerpo": "={{ $json.BorradorCuerpo }}",
+            "Acción": "={{ $json.Accion }}",
+            "FechaAccion": "={{ $json.FechaAccion }}",
+            "Asignado": "={{ $json.Asignado }}",
+            "FechaAsignacion": "={{ $json.FechaAsignacion }}",
+            "idOperacion": "={{ $json.idOperacion }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "idOperacion",
+              "displayName": "idOperacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        480
+      ],
+      "id": "8a7abfdd-70f3-45cb-8be5-b4c857776e1e",
+      "name": "Append row in sheet - Email ya procesado",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "cefab19b-ea5f-42ed-925d-e498ec8a994a",
+              "leftValue": "={{ $json.Producto }}",
+              "rightValue": "=No aplica",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2592,
+        80
+      ],
+      "id": "5b53f7b6-b77c-4f60-8841-c995cd632f35",
+      "name": "If - ¿Se asigna a un ejecutivo?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4",
+          "mode": "list",
+          "cachedResultName": "Emails Recibidos",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 222958166,
+          "mode": "list",
+          "cachedResultName": "Procesar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JKaJpaJ8CzX-FughF7AS1TOrC9_0U6TZYeSajkh3l-4/edit#gid=222958166"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Acción": "=",
+            "FechaAccion": "=",
+            "SesionID": "={{ $json.sesionID }}",
+            "Asignado": "Si",
+            "FechaAsignacion": "={{ $json.FechaAsignacion }}",
+            "idOperacion": "={{ $json.idOperacion }}"
+          },
+          "matchingColumns": [
+            "SesionID"
+          ],
+          "schema": [
+            {
+              "id": "SesionID",
+              "displayName": "SesionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nombre",
+              "displayName": "Nombre",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Prioridad",
+              "displayName": "Prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asunto",
+              "displayName": "Asunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Mensaje",
+              "displayName": "Mensaje",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Categoria",
+              "displayName": "Categoria",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Producto",
+              "displayName": "Producto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Resumen",
+              "displayName": "Resumen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorAsunto",
+              "displayName": "BorradorAsunto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "BorradorCuerpo",
+              "displayName": "BorradorCuerpo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Acción",
+              "displayName": "Acción",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAccion",
+              "displayName": "FechaAccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Asignado",
+              "displayName": "Asignado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "FechaAsignacion",
+              "displayName": "FechaAsignacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "idOperacion",
+              "displayName": "idOperacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4400,
+        400
+      ],
+      "id": "ddff766e-7601-4a91-9d75-7b28579fd41c",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "db024a3f-db1f-475c-901a-ce911bc01b66",
+              "leftValue": "={{ $('Gmail Trigger').item.json.snippet }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -768,
+        112
+      ],
+      "id": "565b36dd-e9d8-4a03-8e3e-8f85b11d7522",
+      "name": "If - ¿Correo vacío?"
+    },
+    {
+      "parameters": {
+        "content": "Verifica que el correo no sea spam",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1024,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "0fb3c957-8802-4df5-8d1c-3e79d9799a05",
+      "name": "Sticky Note23"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "194ea6a4-1cc2-4cc6-8be6-90afc3061f11",
+              "leftValue": "={{ $json.From }}",
+              "rightValue": "noreply|no-reply",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "1391912e-1a07-4961-b39e-1af3c41c5b34",
+              "leftValue": "={{ $json.Subject }}",
+              "rightValue": "auto-reply|no reply|automatic reply|out of office|fuera de oficina|mail delivery subsystem|delivery failed|undeliverable",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            },
+            {
+              "id": "5ee35624-66af-441c-b297-2a22415c9b58",
+              "leftValue": "={{ $('Gmail Trigger').item.json.From.match(/<([^>]+)>/)?.[1] || $item.json.From }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1008,
+        112
+      ],
+      "id": "7482a208-0114-407e-9f56-09536d81cdc9",
+      "name": "If - ¿Es spam?"
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "Reply",
+        "emailType": "html",
+        "message": "Hola [Nombre],\n\nHemos recibido su email sin la consulta. Lo invitamos a enviar otro correo con la información o consulta que necesite que respondamos.\n\n¡Muchas gracias!",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        -512,
+        352
+      ],
+      "id": "954a3e91-a25b-4f4a-bee8-f112ce56c028",
+      "name": "Create a draft",
+      "webhookId": "3d0fea05-11d9-4964-bf00-f9f09611d0e2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bpc6QmL47CGphEDU",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Respuesta al email de cuerpo vacío",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        528
+      ],
+      "typeVersion": 1,
+      "id": "1c450402-9734-4e59-a30c-51c6d03a3a24",
+      "name": "Sticky Note24"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jDxqiu9FN9oa-vrneSv1Vjt8_cTzHMLn2h1G8U3W8fU",
+          "mode": "list",
+          "cachedResultName": "Clientes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDxqiu9FN9oa-vrneSv1Vjt8_cTzHMLn2h1G8U3W8fU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Base de Clientes",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDxqiu9FN9oa-vrneSv1Vjt8_cTzHMLn2h1G8U3W8fU/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Email",
+              "lookupValue": "={{ $('Gmail Trigger').item.json.From.match(/<([^>]+)>/)?.[1] || $item.json.From }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -512,
+        96
+      ],
+      "id": "854cd8f5-9392-4674-8785-21634f5962f6",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "xRJowd1gIKCr8DdC",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ed9a86a4-3588-4bc4-b46a-7b4f0ce8ad21",
+              "name": "Estado",
+              "value": "={{ $json.Email ? 'Es cliente' : 'No es cliente' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -272,
+        96
+      ],
+      "id": "bbe2c088-37f5-45dd-ac9b-75c55345609e",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "content": "Busqueda en el CRM",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "f7dc2da8-0882-404e-90bd-ead96eae8387",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "content": "Toma la salida y genera datos",
+        "height": 96,
+        "width": 150,
+        "color": "#504E70"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -48
+      ],
+      "typeVersion": 1,
+      "id": "bd2f531d-79db-48f1-82e7-ef5da3065112",
+      "name": "Sticky Note26"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "If - ¿Es spam?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - Ordenar la información",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Rechazado": {
+      "main": [
+        [
+          {
+            "node": "SQL - Insert Email Basura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - A procesar": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Insert Email Basura": {
+      "main": [
+        [
+          {
+            "node": "Append - Emails Basura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields - Ordenar la información": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update/Insert y verifica si es cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Update/Insert y verifica si es cliente": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If - ¿Se asigna a un ejecutivo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack - Aviso a Operaciones": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update Asignado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Se procesa?": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields - A procesar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields - Rechazado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Es cliente?": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update Operaciones",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SQL - Update Marketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Update Ejecutivo": {
+      "main": [
+        [
+          {
+            "node": "Append or update - Ejecutivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Update Operaciones": {
+      "main": [
+        [
+          {
+            "node": "Append or update - Operaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Update Asignado": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Update Marketing": {
+      "main": [
+        [
+          {
+            "node": "Append or update - Marketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update - Ejecutivo": {
+      "main": [
+        [
+          {
+            "node": "Send a message - Ejecutivo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update - Operaciones": {
+      "main": [
+        [
+          {
+            "node": "Slack - Aviso a Operaciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update - Marketing": {
+      "main": [
+        [
+          {
+            "node": "Send a message - Marketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message - Marketing": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update Asignado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message - Ejecutivo": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update Asignado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Mensaje nuevo?": {
+      "main": [
+        [
+          {
+            "node": "If - ¿Se procesa?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "SQL - Insert email ya procesado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - ¿Para procesar?": {
+      "main": [
+        [
+          {
+            "node": "If - ¿Mensaje nuevo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SQL - Insert email ya procesado": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet - Email ya procesado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Se asigna a un ejecutivo?": {
+      "main": [
+        [
+          {
+            "node": "SQL - Update Ejecutivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If - ¿Es cliente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "SQL - LOG",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Correo vacío?": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If - ¿Es spam?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If - ¿Correo vacío?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "SQL - ¿Para procesar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9dc3ab89-0eee-46e2-97d8-6f7051fc46e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bd5c9974988bfb0bf31a38aa3ae06f81f02008e715f8b5a4f88f59e87d278a3b"
+  },
+  "nodeGroups": [],
+  "id": "zy97VzRur18pJix5",
+  "tags": []
+}
